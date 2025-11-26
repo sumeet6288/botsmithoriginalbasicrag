@@ -123,7 +123,7 @@ const Enterprise = () => {
         </div>
       </nav>
 
-      <div className="pt-24 pb-16 px-6 relative z-10">
+      <div className="pt-24 pb-16 px-12 md:px-16 lg:px-20 relative z-10">
         <div className="max-w-full mx-auto scale-[0.8] origin-top">
           {/* Back Button */}
           <div className={`mb-6 animate-fade-in-up transform transition-all duration-700 delay-100 ${isLoaded ? 'translate-x-0 opacity-100' : '-translate-x-10 opacity-0'}`}>
