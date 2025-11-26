@@ -684,6 +684,34 @@ const AdvancedUsersManagement = ({ backendUrl }) => {
                           <Database className="w-4 h-4" />
                           <span>{user.statistics?.sources_count || 0} sources</span>
                         </div>
+                        {user.subscription && (
+                          <div className="pt-1 mt-1 border-t border-gray-200">
+                            <div className="flex items-center gap-2 text-purple-600 font-medium">
+                              <DollarSign className="w-4 h-4" />
+                              <span>{user.subscription.plan_name}</span>
+                            </div>
+                            {user.subscription.days_active !== null && (
+                              <div className="flex items-center gap-2 text-blue-600 text-xs">
+                                <Calendar className="w-3 h-3" />
+                                <span>{user.subscription.days_active} days active</span>
+                              </div>
+                            )}
+                            {user.subscription.days_remaining !== null && (
+                              <div className={`flex items-center gap-2 text-xs ${
+                                user.subscription.days_remaining < 7 ? 'text-red-600' : 
+                                user.subscription.days_remaining < 30 ? 'text-orange-600' : 
+                                'text-green-600'
+                              }`}>
+                                <Clock className="w-3 h-3" />
+                                <span>
+                                  {user.subscription.days_remaining > 0 
+                                    ? `${user.subscription.days_remaining} days left` 
+                                    : 'Expired'}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4">
