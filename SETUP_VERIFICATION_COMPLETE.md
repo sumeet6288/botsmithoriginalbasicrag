@@ -2,7 +2,7 @@
 
 **Date:** November 26, 2025  
 **Status:** ALL SYSTEMS OPERATIONAL  
-**Preview URL:** https://quick-mern-setup.preview.emergentagent.com
+**Preview URL:** https://mern-installer-11.preview.emergentagent.com
 
 ---
 
@@ -120,7 +120,7 @@ GET /api/ → {"message": "BotSmith API", "status": "running"}
 GET /api/plans/ → Returns all 4 subscription plans
 
 # Public Access
-GET https://quick-mern-setup.preview.emergentagent.com → 200 OK
+GET https://mern-installer-11.preview.emergentagent.com → 200 OK
 ```
 
 ---
@@ -159,7 +159,7 @@ GET https://quick-mern-setup.preview.emergentagent.com → 200 OK
 
 ### Frontend (.env)
 ```
-✅ REACT_APP_BACKEND_URL=https://quick-mern-setup.preview.emergentagent.com
+✅ REACT_APP_BACKEND_URL=https://mern-installer-11.preview.emergentagent.com
 ✅ WDS_SOCKET_PORT=443
 ```
 
@@ -231,7 +231,7 @@ Results:
 
 The application is fully set up and operational. You can now:
 
-1. **Access the application:** https://quick-mern-setup.preview.emergentagent.com
+1. **Access the application:** https://mern-installer-11.preview.emergentagent.com
 2. **Sign in as admin:** admin@botsmith.com / admin123
 3. **Create chatbots:** Build AI chatbots with multiple providers
 4. **Test subscriptions:** Verify monthly billing cycles
