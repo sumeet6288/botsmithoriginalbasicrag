@@ -448,6 +448,20 @@ class PlanService:
         # Get subscription status
         subscription_status = await self.check_subscription_status(user_id)
         
+        # Calculate days elapsed in current billing period
+        started_at = subscription.get("started_at")
+        expires_at = subscription.get("expires_at")
+        days_elapsed = 0
+        total_days = 30
+        
+        if started_at and expires_at:
+            now = datetime.utcnow()
+            total_days = (expires_at - started_at).days
+            if now >= started_at:
+                days_elapsed = min((now - started_at).days + 1, total_days)  # +1 because day 1 starts on started_at
+            else:
+                days_elapsed = 0
+        
         return {
             "plan": {
                 "id": plan["id"],
@@ -461,6 +475,8 @@ class PlanService:
                 "is_expired": subscription_status.get("is_expired", False),
                 "is_expiring_soon": subscription_status.get("is_expiring_soon", False),
                 "days_remaining": subscription_status.get("days_remaining"),
+                "days_elapsed": days_elapsed,
+                "total_days": total_days,
                 "auto_renew": subscription.get("auto_renew", False),
                 "billing_cycle": subscription.get("billing_cycle", "monthly")
             },
