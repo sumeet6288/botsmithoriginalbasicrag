@@ -2850,3 +2850,108 @@ async def get_user_retention():
             "churn_risk": 0
         }
 
+
+
+# ==================== SUBSCRIPTION MANAGEMENT ====================
+@router.get("/subscriptions/expiring")
+async def get_expiring_subscriptions(days: int = Query(7, description="Days until expiration to filter")):
+    """Get subscriptions expiring within specified days"""
+    try:
+        if db_instance is None:
+            raise HTTPException(status_code=500, detail="Database not initialized")
+        
+        subscriptions_collection = db_instance['subscriptions']
+        users_collection = db_instance['users']
+        
+        # Calculate the date threshold
+        threshold_date = datetime.utcnow() + timedelta(days=days)
+        
+        # Find subscriptions expiring within the threshold
+        expiring_subs = await subscriptions_collection.find({
+            "expires_at": {
+                "$lte": threshold_date,
+                "$gte": datetime.utcnow()
+            },
+            "status": "active"
+        }).to_list(length=1000)
+        
+        # Enrich with user data
+        enriched_subs = []
+        for sub in expiring_subs:
+            user = await users_collection.find_one({"id": sub.get("user_id")})
+            
+            days_remaining = (sub.get("expires_at") - datetime.utcnow()).days
+            
+            enriched_subs.append({
+                "user_id": sub.get("user_id"),
+                "user_name": user.get("name") if user else "Unknown",
+                "user_email": user.get("email") if user else "Unknown",
+                "plan_id": sub.get("plan_id"),
+                "started_at": sub.get("started_at"),
+                "expires_at": sub.get("expires_at"),
+                "days_remaining": days_remaining,
+                "status": sub.get("status"),
+                "auto_renew": sub.get("auto_renew", False),
+                "is_urgent": days_remaining <= 3,
+                "usage": sub.get("usage", {})
+            })
+        
+        # Sort by days remaining (most urgent first)
+        enriched_subs.sort(key=lambda x: x["days_remaining"])
+        
+        return {
+            "subscriptions": enriched_subs,
+            "total": len(enriched_subs),
+            "urgent_count": len([s for s in enriched_subs if s["is_urgent"]]),
+            "threshold_days": days
+        }
+    except Exception as e:
+        logger.error(f"Error in get_expiring_subscriptions: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/subscriptions/expired")
+async def get_expired_subscriptions():
+    """Get all expired subscriptions"""
+    try:
+        if db_instance is None:
+            raise HTTPException(status_code=500, detail="Database not initialized")
+        
+        subscriptions_collection = db_instance['subscriptions']
+        users_collection = db_instance['users']
+        
+        # Find expired subscriptions
+        expired_subs = await subscriptions_collection.find({
+            "expires_at": {"$lt": datetime.utcnow()},
+            "status": {"$in": ["active", "expired"]}
+        }).to_list(length=1000)
+        
+        # Enrich with user data
+        enriched_subs = []
+        for sub in expired_subs:
+            user = await users_collection.find_one({"id": sub.get("user_id")})
+            
+            days_overdue = (datetime.utcnow() - sub.get("expires_at")).days
+            
+            enriched_subs.append({
+                "user_id": sub.get("user_id"),
+                "user_name": user.get("name") if user else "Unknown",
+                "user_email": user.get("email") if user else "Unknown",
+                "plan_id": sub.get("plan_id"),
+                "expired_on": sub.get("expires_at"),
+                "days_overdue": days_overdue,
+                "status": sub.get("status"),
+                "usage": sub.get("usage", {})
+            })
+        
+        # Sort by days overdue (most overdue first)
+        enriched_subs.sort(key=lambda x: x["days_overdue"], reverse=True)
+        
+        return {
+            "subscriptions": enriched_subs,
+            "total": len(enriched_subs)
+        }
+    except Exception as e:
+        logger.error(f"Error in get_expired_subscriptions: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
