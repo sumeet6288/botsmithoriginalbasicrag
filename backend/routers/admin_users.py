@@ -122,6 +122,42 @@ async def get_enhanced_users(
                     'chatbot_id': {'$in': user_chatbot_ids}
                 })
             
+            # Get subscription information
+            subscription_info = None
+            subscription = user.get('subscription')
+            if subscription:
+                start_date = subscription.get('start_date')
+                end_date = subscription.get('end_date') or subscription.get('expires_at')
+                
+                # Calculate days
+                now = datetime.now(timezone.utc)
+                days_active = None
+                days_remaining = None
+                
+                if start_date:
+                    if isinstance(start_date, str):
+                        start_date = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+                    if start_date.tzinfo is None:
+                        start_date = start_date.replace(tzinfo=timezone.utc)
+                    days_active = (now - start_date).days
+                
+                if end_date:
+                    if isinstance(end_date, str):
+                        end_date = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+                    if end_date.tzinfo is None:
+                        end_date = end_date.replace(tzinfo=timezone.utc)
+                    days_remaining = (end_date - now).days
+                
+                subscription_info = {
+                    'plan_name': subscription.get('plan_name', 'Free'),
+                    'status': subscription.get('status', 'active'),
+                    'start_date': start_date.isoformat() if start_date else None,
+                    'end_date': end_date.isoformat() if end_date else None,
+                    'days_active': days_active,
+                    'days_remaining': days_remaining,
+                    'auto_renew': subscription.get('auto_renew', False)
+                }
+            
             enhanced_users.append({
                 'user_id': user.get('id'),
                 'name': user.get('name'),
@@ -144,6 +180,7 @@ async def get_enhanced_users(
                 'custom_max_messages': user.get('custom_max_messages'),
                 'custom_max_file_uploads': user.get('custom_max_file_uploads'),
                 'admin_notes': user.get('admin_notes'),
+                'subscription': subscription_info,
                 'statistics': {
                     'chatbots_count': chatbots_count,
                     'messages_count': messages_count,
