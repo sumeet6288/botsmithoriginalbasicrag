@@ -312,15 +312,30 @@ const Dashboard = () => {
         {usageStats && (
           <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100 mb-6 animate-fade-in-up">
             <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-purple-700 flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-white" />
+              <div className="flex items-center gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-purple-700 flex items-center justify-center">
+                      <Sparkles className="w-4 h-4 text-white" />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900">{usageStats.plan?.name} Plan</h2>
                   </div>
-                  <h2 className="text-xl font-bold text-gray-900">{usageStats.plan?.name} Plan</h2>
+                  <p className="text-xs text-gray-600">Monitor your resource usage and limits</p>
                 </div>
-                <p className="text-xs text-gray-600">Monitor your resource usage and limits</p>
+                
+                {/* Day Counter */}
+                {usageStats.subscription?.days_elapsed !== undefined && usageStats.subscription?.total_days && (
+                  <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg">
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-600 font-medium">Subscription Day</span>
+                      <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                        {usageStats.subscription.days_elapsed}/{usageStats.subscription.total_days}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
+              
               <Button
                 onClick={() => navigate('/subscription')}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-1.5 rounded-lg font-semibold shadow-md text-sm"
