@@ -1831,7 +1831,7 @@ async def get_user_subscription(user_id: str):
             }
         
         # Get plan details
-        plan = await plans_collection.find_one({"plan_id": subscription.get("plan_id")})
+        plan = await plans_collection.find_one({"id": subscription.get("plan_id")})
         
         return {
             "user_id": user_id,
