@@ -1961,7 +1961,7 @@ async def update_user_subscription(user_id: str, subscription_data: dict):
         
         # Get updated subscription
         updated_subscription = await subscriptions_collection.find_one({"user_id": user_id})
-        plan = await plans_collection.find_one({"plan_id": updated_subscription.get("plan_id")})
+        plan = await plans_collection.find_one({"id": updated_subscription.get("plan_id")})
         
         return {
             "success": True,
