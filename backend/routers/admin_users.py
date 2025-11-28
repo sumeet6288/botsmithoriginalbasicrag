@@ -1875,7 +1875,7 @@ async def update_user_subscription(user_id: str, subscription_data: dict):
         # Verify plan exists
         plan_id = subscription_data.get("plan_id")
         if plan_id:
-            plan = await plans_collection.find_one({"plan_id": plan_id})
+            plan = await plans_collection.find_one({"id": plan_id})
             if not plan:
                 raise HTTPException(status_code=404, detail="Plan not found")
         
