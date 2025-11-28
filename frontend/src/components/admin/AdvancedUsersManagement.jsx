@@ -430,6 +430,92 @@ const AdvancedUsersManagement = ({ backendUrl }) => {
     }
   };
 
+  // Subscription Management Handlers
+  const handleOpenSubscriptionModal = async (userId) => {
+    try {
+      // Fetch available plans
+      const plansResponse = await fetch(`${backendUrl}/api/plans/`);
+      const plans = await plansResponse.json();
+      setAvailablePlans(plans);
+      
+      // Fetch current subscription
+      const subResponse = await fetch(`${backendUrl}/api/admin/users/${userId}/subscription`);
+      const subData = await subResponse.json();
+      
+      if (subData.has_subscription) {
+        setCurrentSubscription(subData.subscription);
+        setSubscriptionForm({
+          plan_id: subData.subscription.plan_id || '',
+          start_date: subData.subscription.start_date ? subData.subscription.start_date.split('T')[0] : '',
+          expires_at: subData.subscription.expires_at ? subData.subscription.expires_at.split('T')[0] : '',
+          auto_renew: subData.subscription.auto_renew || false,
+          status: subData.subscription.status || 'active'
+        });
+      } else {
+        setCurrentSubscription(null);
+        setSubscriptionForm({
+          plan_id: 'free',
+          start_date: new Date().toISOString().split('T')[0],
+          expires_at: new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
+          auto_renew: true,
+          status: 'active'
+        });
+      }
+      
+      setShowSubscriptionModal(true);
+    } catch (error) {
+      alert('Error loading subscription data');
+      console.error(error);
+    }
+  };
+
+  const handleUpdateSubscription = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const response = await fetch(`${backendUrl}/api/admin/users/${viewingUser.user_id}/subscription`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(subscriptionForm)
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        alert('Subscription updated successfully!');
+        setShowSubscriptionModal(false);
+        fetchUsers();
+        fetchStatistics();
+      } else {
+        alert(`Failed to update subscription: ${data.detail || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert('Error updating subscription');
+      console.error(error);
+    }
+  };
+
+  const handleExtendSubscription = async (days) => {
+    if (!window.confirm(`Extend subscription by ${days} days?`)) return;
+    
+    try {
+      const response = await fetch(`${backendUrl}/api/admin/users/${viewingUser.user_id}/subscription/extend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ days })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        alert(data.message);
+        await handleOpenSubscriptionModal(viewingUser.user_id);
+        fetchUsers();
+      }
+    } catch (error) {
+      alert('Error extending subscription');
+      console.error(error);
+    }
+  };
+
   // Filter users based on search term
   const filteredUsers = users.filter(user => {
     const searchLower = searchTerm.toLowerCase();
