@@ -401,6 +401,7 @@ class PlanService:
     async def renew_subscription(self, user_id: str) -> dict:
         """Renew user's current subscription for another month"""
         subscription = await self.get_user_subscription(user_id)
+        plan = await self.get_plan_by_id(subscription["plan_id"])
         
         # Calculate new expiration date - 30 days from now
         started_at = datetime.utcnow()
@@ -420,6 +421,18 @@ class PlanService:
         
         # Get updated subscription
         updated_subscription = await self.get_user_subscription(user_id)
+        
+        # Log to history
+        await self.add_subscription_history(
+            user_id=user_id,
+            action="subscription_renewed",
+            subscription=updated_subscription,
+            plan=plan,
+            metadata={
+                "renewal_type": "manual"
+            }
+        )
+        
         return updated_subscription
     
     async def get_usage_stats(self, user_id: str) -> dict:
