@@ -1721,6 +1721,211 @@ const AdvancedUsersManagement = ({ backendUrl }) => {
         </div>
       )}
 
+      {/* Manage Subscription Modal */}
+      {showSubscriptionModal && viewingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-4 flex items-center justify-between rounded-t-xl">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-6 h-6" />
+                <h2 className="text-xl font-bold">Manage Subscription</h2>
+              </div>
+              <button onClick={() => setShowSubscriptionModal(false)} className="p-2 hover:bg-white/20 rounded-lg transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              {/* User Info */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">User Information</h3>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div><span className="text-gray-600">Name:</span> <span className="font-medium">{viewingUser.name}</span></div>
+                  <div><span className="text-gray-600">Email:</span> <span className="font-medium">{viewingUser.email}</span></div>
+                </div>
+              </div>
+
+              {/* Current Subscription Info */}
+              {currentSubscription && (
+                <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h3 className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                    <Database className="w-4 h-4" />
+                    Current Subscription
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-blue-700">Plan:</span> 
+                      <span className="ml-2 font-bold text-blue-900">{currentSubscription.plan_name}</span>
+                    </div>
+                    <div>
+                      <span className="text-blue-700">Status:</span> 
+                      <span className={`ml-2 font-semibold ${
+                        currentSubscription.status === 'active' ? 'text-green-600' : 
+                        currentSubscription.status === 'expired' ? 'text-red-600' : 'text-yellow-600'
+                      }`}>
+                        {currentSubscription.status}
+                      </span>
+                    </div>
+                    {currentSubscription.start_date && (
+                      <div>
+                        <span className="text-blue-700">Started:</span> 
+                        <span className="ml-2 font-medium text-blue-900">
+                          {new Date(currentSubscription.start_date).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+                    {currentSubscription.expires_at && (
+                      <div>
+                        <span className="text-blue-700">Expires:</span> 
+                        <span className="ml-2 font-medium text-blue-900">
+                          {new Date(currentSubscription.expires_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+                    <div>
+                      <span className="text-blue-700">Auto-renew:</span> 
+                      <span className="ml-2 font-medium text-blue-900">
+                        {currentSubscription.auto_renew ? 'Yes' : 'No'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Quick Actions */}
+              <div className="mb-6 flex gap-2 flex-wrap">
+                <button
+                  onClick={() => handleExtendSubscription(30)}
+                  className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium flex items-center gap-2"
+                >
+                  <Clock className="w-4 h-4" />
+                  Extend +30 Days
+                </button>
+                <button
+                  onClick={() => handleExtendSubscription(7)}
+                  className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium flex items-center gap-2"
+                >
+                  <Clock className="w-4 h-4" />
+                  Extend +7 Days
+                </button>
+                <button
+                  onClick={() => setSubscriptionForm({...subscriptionForm, expires_at: 'lifetime'})}
+                  className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm font-medium flex items-center gap-2"
+                >
+                  <Star className="w-4 h-4" />
+                  Set Lifetime
+                </button>
+              </div>
+
+              {/* Subscription Form */}
+              <form onSubmit={handleUpdateSubscription} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Subscription Plan
+                  </label>
+                  <select
+                    value={subscriptionForm.plan_id}
+                    onChange={(e) => setSubscriptionForm({...subscriptionForm, plan_id: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  >
+                    <option value="">Select Plan</option>
+                    {availablePlans.map((plan) => (
+                      <option key={plan.plan_id} value={plan.plan_id}>
+                        {plan.name} - ${plan.price}/month
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={subscriptionForm.start_date}
+                      onChange={(e) => setSubscriptionForm({...subscriptionForm, start_date: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Expiration Date
+                    </label>
+                    <input
+                      type="date"
+                      value={subscriptionForm.expires_at === 'lifetime' ? '' : subscriptionForm.expires_at}
+                      onChange={(e) => setSubscriptionForm({...subscriptionForm, expires_at: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Leave empty for lifetime"
+                    />
+                    {subscriptionForm.expires_at === 'lifetime' && (
+                      <p className="text-xs text-purple-600 mt-1 font-medium">Lifetime access enabled</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Status
+                    </label>
+                    <select
+                      value={subscriptionForm.status}
+                      onChange={(e) => setSubscriptionForm({...subscriptionForm, status: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="active">Active</option>
+                      <option value="paused">Paused</option>
+                      <option value="expired">Expired</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                      Auto-renew
+                    </label>
+                    <div className="flex items-center h-10">
+                      <input
+                        type="checkbox"
+                        checked={subscriptionForm.auto_renew}
+                        onChange={(e) => setSubscriptionForm({...subscriptionForm, auto_renew: e.target.checked})}
+                        className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="ml-3 text-sm text-gray-600">
+                        {subscriptionForm.auto_renew ? 'Enabled' : 'Disabled'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4 border-t border-gray-200">
+                  <button
+                    type="submit"
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg font-semibold flex items-center justify-center gap-2"
+                  >
+                    <Save className="w-5 h-5" />
+                    Save Changes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowSubscriptionModal(false)}
+                    className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-semibold"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Ultimate Edit User Modal */}
       {showUltimateEditModal && viewingUser && (
         <UltimateEditUserModal
