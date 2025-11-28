@@ -42,7 +42,7 @@
 ## 🌐 Access URLs
 
 ### Frontend (React Application)
-- **Public URL**: https://fullstack-setup-16.preview.emergentagent.com
+- **Public URL**: https://subscription-enabler.preview.emergentagent.com
 - **Status**: ✅ HTTP 200 - Accessible
 - **Features**: 
   - Landing page
@@ -53,9 +53,9 @@
   - Subscription management
 
 ### Backend (FastAPI)
-- **API Documentation**: https://fullstack-setup-16.preview.emergentagent.com/docs
+- **API Documentation**: https://subscription-enabler.preview.emergentagent.com/docs
 - **Status**: ✅ HTTP 200 - Accessible
-- **API Base URL**: https://fullstack-setup-16.preview.emergentagent.com/api
+- **API Base URL**: https://subscription-enabler.preview.emergentagent.com/api
 - **Note**: All backend routes must use `/api` prefix for proper routing
 
 ## 📊 Service Status
@@ -89,7 +89,7 @@
 ## 🎯 Next Steps
 
 1. **Access the Application**:
-   - Visit: https://fullstack-setup-16.preview.emergentagent.com
+   - Visit: https://subscription-enabler.preview.emergentagent.com
    - Click "Sign In" 
    - Use admin credentials: admin@botsmith.com / admin123
 
@@ -101,7 +101,7 @@
    - Manage users and subscriptions (Admin Panel)
 
 3. **API Documentation**:
-   - Visit: https://fullstack-setup-16.preview.emergentagent.com/docs
+   - Visit: https://subscription-enabler.preview.emergentagent.com/docs
    - Test API endpoints interactively
    - View all available endpoints and schemas
 

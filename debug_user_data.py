@@ -5,7 +5,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = "https://fullstack-setup-16.preview.emergentagent.com/api"
+BACKEND_URL = "https://subscription-enabler.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@botsmith.com"
 ADMIN_PASSWORD = "admin123"
 
