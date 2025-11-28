@@ -1798,3 +1798,251 @@ async def ultimate_update_user(user_id: str, update_data: Dict[str, Any]):
         logger.error(f"Error in ultimate user update: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error updating user: {str(e)}")
 
+
+
+
+# ============================================================================
+# SUBSCRIPTION MANAGEMENT ENDPOINTS
+# ============================================================================
+
+@router.get("/{user_id}/subscription")
+async def get_user_subscription(user_id: str):
+    """Get user's subscription details (Admin only)"""
+    try:
+        if db_instance is None:
+            raise HTTPException(status_code=500, detail="Database not initialized")
+        
+        users_collection = db_instance['users']
+        subscriptions_collection = db_instance['subscriptions']
+        plans_collection = db_instance['plans']
+        
+        # Get user
+        user = await users_collection.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Get subscription
+        subscription = await subscriptions_collection.find_one({"user_id": user_id})
+        if not subscription:
+            return {
+                "user_id": user_id,
+                "has_subscription": False,
+                "message": "No subscription found"
+            }
+        
+        # Get plan details
+        plan = await plans_collection.find_one({"plan_id": subscription.get("plan_id")})
+        
+        return {
+            "user_id": user_id,
+            "has_subscription": True,
+            "subscription": {
+                "plan_id": subscription.get("plan_id"),
+                "plan_name": plan.get("name") if plan else "Unknown",
+                "start_date": subscription.get("start_date").isoformat() if subscription.get("start_date") else None,
+                "expires_at": subscription.get("expires_at").isoformat() if subscription.get("expires_at") else None,
+                "auto_renew": subscription.get("auto_renew", False),
+                "status": subscription.get("status", "active"),
+                "stripe_customer_id": subscription.get("stripe_customer_id"),
+                "usage": subscription.get("usage", {})
+            },
+            "plan_details": plan if plan else None
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting user subscription: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving subscription: {str(e)}")
+
+
+@router.put("/{user_id}/subscription")
+async def update_user_subscription(user_id: str, subscription_data: dict):
+    """Update user's subscription/plan (Admin only)"""
+    try:
+        if db_instance is None:
+            raise HTTPException(status_code=500, detail="Database not initialized")
+        
+        users_collection = db_instance['users']
+        subscriptions_collection = db_instance['subscriptions']
+        plans_collection = db_instance['plans']
+        
+        # Verify user exists
+        user = await users_collection.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Verify plan exists
+        plan_id = subscription_data.get("plan_id")
+        if plan_id:
+            plan = await plans_collection.find_one({"plan_id": plan_id})
+            if not plan:
+                raise HTTPException(status_code=404, detail="Plan not found")
+        
+        # Prepare update document
+        from datetime import datetime as dt
+        update_doc = {"updated_at": dt.utcnow()}
+        
+        # Handle plan change
+        if "plan_id" in subscription_data:
+            update_doc["plan_id"] = subscription_data["plan_id"]
+            
+            # If changing plan, set new start date and expiration
+            if subscription_data.get("reset_dates", False):
+                update_doc["start_date"] = dt.utcnow()
+                update_doc["expires_at"] = dt.utcnow() + timedelta(days=30)
+        
+        # Handle custom dates
+        if "start_date" in subscription_data and subscription_data["start_date"]:
+            update_doc["start_date"] = datetime.fromisoformat(subscription_data["start_date"].replace('Z', '+00:00'))
+        
+        if "expires_at" in subscription_data and subscription_data["expires_at"]:
+            if subscription_data["expires_at"] == "lifetime":
+                update_doc["expires_at"] = None
+                update_doc["lifetime_access"] = True
+            else:
+                update_doc["expires_at"] = datetime.fromisoformat(subscription_data["expires_at"].replace('Z', '+00:00'))
+                update_doc["lifetime_access"] = False
+        
+        # Handle other fields
+        if "auto_renew" in subscription_data:
+            update_doc["auto_renew"] = subscription_data["auto_renew"]
+        
+        if "status" in subscription_data:
+            update_doc["status"] = subscription_data["status"]
+        
+        if "stripe_customer_id" in subscription_data:
+            update_doc["stripe_customer_id"] = subscription_data["stripe_customer_id"]
+        
+        # Update subscription
+        existing_subscription = await subscriptions_collection.find_one({"user_id": user_id})
+        
+        if existing_subscription:
+            # Update existing subscription
+            result = await subscriptions_collection.update_one(
+                {"user_id": user_id},
+                {"$set": update_doc}
+            )
+            
+            if result.modified_count == 0 and result.matched_count == 0:
+                raise HTTPException(status_code=500, detail="Failed to update subscription")
+        else:
+            # Create new subscription
+            new_subscription = {
+                "user_id": user_id,
+                "plan_id": subscription_data.get("plan_id", "free"),
+                "start_date": dt.utcnow(),
+                "expires_at": dt.utcnow() + timedelta(days=30),
+                "auto_renew": subscription_data.get("auto_renew", True),
+                "status": subscription_data.get("status", "active"),
+                "created_at": dt.utcnow(),
+                "updated_at": dt.utcnow(),
+                "usage": {
+                    "chatbots_count": 0,
+                    "messages_this_month": 0,
+                    "file_uploads_count": 0,
+                    "website_sources_count": 0,
+                    "text_sources_count": 0,
+                    "last_reset": dt.utcnow()
+                }
+            }
+            new_subscription.update(update_doc)
+            await subscriptions_collection.insert_one(new_subscription)
+        
+        # Log activity
+        await log_activity(
+            user_id=user_id,
+            action="subscription_updated",
+            resource_type="subscription",
+            resource_id=user_id,
+            details=f"Admin updated subscription: {subscription_data}",
+            ip_address="admin"
+        )
+        
+        # Get updated subscription
+        updated_subscription = await subscriptions_collection.find_one({"user_id": user_id})
+        plan = await plans_collection.find_one({"plan_id": updated_subscription.get("plan_id")})
+        
+        return {
+            "success": True,
+            "message": "Subscription updated successfully",
+            "subscription": {
+                "plan_id": updated_subscription.get("plan_id"),
+                "plan_name": plan.get("name") if plan else "Unknown",
+                "start_date": updated_subscription.get("start_date").isoformat() if updated_subscription.get("start_date") else None,
+                "expires_at": updated_subscription.get("expires_at").isoformat() if updated_subscription.get("expires_at") else None,
+                "auto_renew": updated_subscription.get("auto_renew", False),
+                "status": updated_subscription.get("status", "active")
+            }
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating user subscription: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error updating subscription: {str(e)}")
+
+
+@router.post("/{user_id}/subscription/extend")
+async def extend_user_subscription(user_id: str, extension_data: dict):
+    """Extend user's subscription by specified days (Admin only)"""
+    try:
+        if db_instance is None:
+            raise HTTPException(status_code=500, detail="Database not initialized")
+        
+        subscriptions_collection = db_instance['subscriptions']
+        
+        # Get subscription
+        subscription = await subscriptions_collection.find_one({"user_id": user_id})
+        if not subscription:
+            raise HTTPException(status_code=404, detail="Subscription not found")
+        
+        days_to_extend = extension_data.get("days", 30)
+        
+        # Calculate new expiration date
+        from datetime import datetime as dt
+        current_expires = subscription.get("expires_at")
+        if current_expires:
+            if isinstance(current_expires, str):
+                current_expires = datetime.fromisoformat(current_expires.replace('Z', '+00:00'))
+            new_expires = current_expires + timedelta(days=days_to_extend)
+        else:
+            # If no expiration (lifetime), add from now
+            new_expires = dt.utcnow() + timedelta(days=days_to_extend)
+        
+        # Update subscription
+        result = await subscriptions_collection.update_one(
+            {"user_id": user_id},
+            {
+                "$set": {
+                    "expires_at": new_expires,
+                    "updated_at": dt.utcnow()
+                }
+            }
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=500, detail="Failed to extend subscription")
+        
+        # Log activity
+        await log_activity(
+            user_id=user_id,
+            action="subscription_extended",
+            resource_type="subscription",
+            resource_id=user_id,
+            details=f"Admin extended subscription by {days_to_extend} days",
+            ip_address="admin"
+        )
+        
+        return {
+            "success": True,
+            "message": f"Subscription extended by {days_to_extend} days",
+            "new_expiration": new_expires.isoformat()
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error extending subscription: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error extending subscription: {str(e)}")
+
