@@ -93,3 +93,57 @@ async def renew_subscription(current_user: User = Depends(get_current_user)):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/subscription-history")
+async def get_subscription_history(current_user: User = Depends(get_current_user)):
+    """Get user's complete subscription history"""
+    try:
+        history = await plan_service.get_subscription_history(current_user.id)
+        
+        # Convert ObjectId to string for all records
+        for record in history:
+            if "_id" in record:
+                record["_id"] = str(record["_id"])
+        
+        return {
+            "history": history,
+            "total_records": len(history)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/subscription-details")
+async def get_subscription_details(current_user: User = Depends(get_current_user)):
+    """Get comprehensive subscription details including current plan, history, and usage"""
+    try:
+        # Get current subscription
+        subscription = await plan_service.get_user_subscription(current_user.id)
+        plan = await plan_service.get_plan_by_id(subscription["plan_id"])
+        
+        # Get subscription history
+        history = await plan_service.get_subscription_history(current_user.id)
+        
+        # Get usage stats
+        usage_stats = await plan_service.get_usage_stats(current_user.id)
+        
+        # Get subscription status
+        status = await plan_service.check_subscription_status(current_user.id)
+        
+        # Convert ObjectId to string
+        if "_id" in subscription:
+            subscription["_id"] = str(subscription["_id"])
+        if "_id" in plan:
+            plan["_id"] = str(plan["_id"])
+        for record in history:
+            if "_id" in record:
+                record["_id"] = str(record["_id"])
+        
+        return {
+            "current_subscription": subscription,
+            "current_plan": plan,
+            "history": history,
+            "usage": usage_stats,
+            "status": status
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
