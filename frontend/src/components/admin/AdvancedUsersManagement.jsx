@@ -1831,8 +1831,8 @@ const AdvancedUsersManagement = ({ backendUrl }) => {
                   >
                     <option value="">Select Plan</option>
                     {availablePlans.map((plan) => (
-                      <option key={plan.plan_id} value={plan.plan_id}>
-                        {plan.name} - ${plan.price}/month
+                      <option key={plan.id || plan.plan_id} value={plan.id || plan.plan_id}>
+                        {plan.name} - {plan.price === -1 ? 'Custom Pricing' : plan.price === 0 ? 'Free' : `$${(plan.price / 100).toFixed(2)}/month`}
                       </option>
                     ))}
                   </select>
