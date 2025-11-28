@@ -514,6 +514,64 @@ class PlanService:
             },
             "last_reset": usage.get("last_reset", datetime.utcnow())
         }
+    
+    async def get_subscription_history(self, user_id: str) -> List[dict]:
+        """Get user's subscription history"""
+        # Create a subscription history collection if it doesn't exist
+        history_collection = self.db.subscription_history
+        
+        # Get all history records for this user
+        history = await history_collection.find(
+            {"user_id": user_id}
+        ).sort("timestamp", -1).to_list(length=100)
+        
+        # If no history exists, create initial history from current subscription
+        if not history:
+            current_subscription = await self.get_user_subscription(user_id)
+            current_plan = await self.get_plan_by_id(current_subscription["plan_id"])
+            
+            # Create initial history record
+            initial_record = {
+                "user_id": user_id,
+                "plan_id": current_subscription["plan_id"],
+                "plan_name": current_plan["name"],
+                "action": "subscription_started",
+                "status": current_subscription.get("status", "active"),
+                "started_at": current_subscription.get("started_at", datetime.utcnow()),
+                "expires_at": current_subscription.get("expires_at"),
+                "billing_cycle": current_subscription.get("billing_cycle", "monthly"),
+                "auto_renew": current_subscription.get("auto_renew", False),
+                "timestamp": current_subscription.get("started_at", datetime.utcnow()),
+                "metadata": {
+                    "source": "initial_creation"
+                }
+            }
+            
+            await history_collection.insert_one(initial_record)
+            history = [initial_record]
+        
+        return history
+    
+    async def add_subscription_history(self, user_id: str, action: str, subscription: dict, plan: dict, metadata: dict = None):
+        """Add a record to subscription history"""
+        history_collection = self.db.subscription_history
+        
+        record = {
+            "user_id": user_id,
+            "plan_id": subscription["plan_id"],
+            "plan_name": plan["name"],
+            "action": action,  # e.g., "upgraded", "renewed", "downgraded", "expired", "cancelled"
+            "status": subscription.get("status", "active"),
+            "started_at": subscription.get("started_at"),
+            "expires_at": subscription.get("expires_at"),
+            "billing_cycle": subscription.get("billing_cycle", "monthly"),
+            "auto_renew": subscription.get("auto_renew", False),
+            "timestamp": datetime.utcnow(),
+            "metadata": metadata or {}
+        }
+        
+        await history_collection.insert_one(record)
+        return record
 
 # Global instance
 plan_service = PlanService()
