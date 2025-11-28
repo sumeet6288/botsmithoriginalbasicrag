@@ -207,7 +207,8 @@ class PlanService:
     async def upgrade_plan(self, user_id: str, new_plan_id: str) -> dict:
         """Upgrade user to a new plan"""
         # Get current subscription
-        subscription = await self.get_user_subscription(user_id)
+        old_subscription = await self.get_user_subscription(user_id)
+        old_plan = await self.get_plan_by_id(old_subscription["plan_id"])
         
         # Calculate new expiration date - 30 days from now
         started_at = datetime.utcnow()
@@ -228,8 +229,24 @@ class PlanService:
             {"$set": update_data}
         )
         
-        # Get updated subscription
+        # Get updated subscription and new plan
         updated_subscription = await self.get_user_subscription(user_id)
+        new_plan = await self.get_plan_by_id(new_plan_id)
+        
+        # Log to history
+        await self.add_subscription_history(
+            user_id=user_id,
+            action="plan_upgraded",
+            subscription=updated_subscription,
+            plan=new_plan,
+            metadata={
+                "old_plan_id": old_plan["id"],
+                "old_plan_name": old_plan["name"],
+                "new_plan_id": new_plan["id"],
+                "new_plan_name": new_plan["name"]
+            }
+        )
+        
         return updated_subscription
     
     async def check_limit(self, user_id: str, limit_type: str) -> dict:
