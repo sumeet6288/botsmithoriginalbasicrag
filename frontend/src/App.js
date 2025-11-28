@@ -175,6 +175,7 @@ function AppContent() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/subscription" element={<Subscription />} />
+            <Route path="/subscription-details" element={<SubscriptionDetails />} />
             <Route path="/leads" element={<LeadsManagement />} />
             <Route path="/account-settings" element={<AccountSettings />} />
             <Route path="/notification-preferences" element={<NotificationPreferences />} />
