@@ -139,29 +139,6 @@ const UserProfileDropdown = ({ user, onLogout }) => {
           </div>
         </DropdownMenuItem>
         
-        <DropdownMenuItem 
-          onClick={() => navigate('/subscription')} 
-          className="cursor-pointer rounded px-2 py-1.5 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 transition-all duration-200 group mb-0.5"
-        >
-          <div className="flex items-center gap-2 w-full">
-            <div className="w-6 h-6 rounded bg-indigo-100 group-hover:bg-indigo-200 flex items-center justify-center transition-colors">
-              <CreditCard className="h-3 w-3 text-indigo-600" />
-            </div>
-            <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700 transition-colors">Subscription</span>
-          </div>
-        </DropdownMenuItem>
-        
-        <DropdownMenuItem 
-          onClick={() => navigate('/subscription-details')} 
-          className="cursor-pointer rounded px-2 py-1.5 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 transition-all duration-200 group mb-0.5"
-        >
-          <div className="flex items-center gap-2 w-full">
-            <div className="w-6 h-6 rounded bg-pink-100 group-hover:bg-pink-200 flex items-center justify-center transition-colors">
-              <CreditCard className="h-3 w-3 text-pink-600" />
-            </div>
-            <span className="text-xs font-medium text-gray-700 group-hover:text-pink-700 transition-colors">Subscription Details</span>
-          </div>
-        </DropdownMenuItem>
         
         <DropdownMenuItem 
           onClick={() => navigate('/workspace')} 
