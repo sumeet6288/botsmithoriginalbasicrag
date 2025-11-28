@@ -118,6 +118,9 @@ export const plansAPI = {
   upgradePlan: (planId) => api.post('/plans/upgrade', { plan_id: planId }),
   getUsageStats: () => api.get('/plans/usage'),
   checkLimit: (limitType) => api.get(`/plans/check-limit/${limitType}`),
+  getSubscriptionHistory: () => api.get('/plans/subscription-history'),
+  getSubscriptionDetails: () => api.get('/plans/subscription-details'),
+  renewSubscription: () => api.post('/plans/renew'),
 };
 
 
