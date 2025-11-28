@@ -1833,6 +1833,18 @@ async def get_user_subscription(user_id: str):
         # Get plan details
         plan = await plans_collection.find_one({"id": subscription.get("plan_id")})
         
+        # Prepare plan details without ObjectId
+        plan_details = None
+        if plan:
+            plan_details = {
+                "id": plan.get("id"),
+                "name": plan.get("name"),
+                "price": plan.get("price"),
+                "description": plan.get("description"),
+                "features": plan.get("features", []),
+                "limits": plan.get("limits", {})
+            }
+        
         return {
             "user_id": user_id,
             "has_subscription": True,
@@ -1846,7 +1858,7 @@ async def get_user_subscription(user_id: str):
                 "stripe_customer_id": subscription.get("stripe_customer_id"),
                 "usage": subscription.get("usage", {})
             },
-            "plan_details": plan if plan else None
+            "plan_details": plan_details
         }
     
     except HTTPException:
