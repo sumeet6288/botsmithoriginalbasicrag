@@ -85,6 +85,17 @@ const AdvancedUsersManagement = ({ backendUrl }) => {
     message: ''
   });
   
+  // Subscription Form State
+  const [subscriptionForm, setSubscriptionForm] = useState({
+    plan_id: '',
+    start_date: '',
+    expires_at: '',
+    auto_renew: true,
+    status: 'active'
+  });
+  const [availablePlans, setAvailablePlans] = useState([]);
+  const [currentSubscription, setCurrentSubscription] = useState(null);
+  
   // Advanced Search State
   const [advancedSearch, setAdvancedSearch] = useState({
     email: '',
