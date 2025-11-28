@@ -769,6 +769,17 @@ const AdvancedUsersManagement = ({ backendUrl }) => {
                               <Settings className="w-4 h-4" />
                               Ultimate Edit ✨
                             </button>
+                            <button
+                              onClick={async () => {
+                                setViewingUser(user);
+                                await handleOpenSubscriptionModal(user.user_id);
+                                setOpenDropdownId(null);
+                              }}
+                              className="w-full px-4 py-2 text-left text-sm hover:bg-blue-50 flex items-center gap-2 text-blue-700 font-medium"
+                            >
+                              <CreditCard className="w-4 h-4" />
+                              Manage Subscription
+                            </button>
                             <div className="border-t border-gray-200 my-2"></div>
                             <button
                               onClick={() => {
