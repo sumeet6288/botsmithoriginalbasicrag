@@ -322,18 +322,7 @@ const Dashboard = () => {
                   </div>
                   <p className="text-xs text-gray-600">Monitor your resource usage and limits</p>
                 </div>
-                
-                {/* Day Counter */}
-                {usageStats.subscription?.days_elapsed !== undefined && usageStats.subscription?.total_days && (
-                  <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg">
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-600 font-medium">Subscription Day</span>
-                      <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                        {usageStats.subscription.days_elapsed}/{usageStats.subscription.total_days}
-                      </span>
-                    </div>
-                  </div>
-                )}
+                {/* Day Counter removed as per user request */}
               </div>
               
               <Button
