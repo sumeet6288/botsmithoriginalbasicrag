@@ -132,7 +132,7 @@ curl -X POST http://localhost:8001/api/admin/users/{user_id}/subscription/extend
 ```
 
 ### Frontend Access:
-- Application URL: https://mongo-app-init.preview.emergentagent.com
+- Application URL: https://fullstack-setup-19.preview.emergentagent.com
 - Admin login: admin@botsmith.com / admin123
 - Navigate to: Admin Panel → Users → Click user menu (⋮) → Manage Subscription
 

@@ -45,7 +45,7 @@
 ## 📱 Application Access
 
 ### Preview URL
-https://mongo-app-init.preview.emergentagent.com
+https://fullstack-setup-19.preview.emergentagent.com
 
 ### Default Admin Credentials
 - **Email**: admin@botsmith.com
@@ -87,7 +87,7 @@ https://mongo-app-init.preview.emergentagent.com
 - EMERGENT_LLM_KEY: Configured
 
 ### Frontend (.env)
-- REACT_APP_BACKEND_URL: https://mongo-app-init.preview.emergentagent.com
+- REACT_APP_BACKEND_URL: https://fullstack-setup-19.preview.emergentagent.com
 - WDS_SOCKET_PORT: 443
 
 ## ✅ All Requirements Met
@@ -97,7 +97,7 @@ https://mongo-app-init.preview.emergentagent.com
 3. ✅ MongoDB running and configured
 4. ✅ Database properly seeded with plans and admin user
 5. ✅ Duplicate subscription menu items removed
-6. ✅ Preview accessible at: https://mongo-app-init.preview.emergentagent.com
+6. ✅ Preview accessible at: https://fullstack-setup-19.preview.emergentagent.com
 
 ## 🚀 Next Steps
 
